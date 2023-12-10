@@ -147,12 +147,15 @@ def patient_admission_scheduling():
             problem.addConstraint(test_telemetry, [variable])
 
     # Resolve o problema
-    solutions = problem.getSolution()
+    solutions = dict(problem.getSolution())
+    solutions = {int(k.split("_")[1]): v for (k, v) in solutions.items()}
     solutions = dict(sorted(solutions.items()))
     # Print the solution(s)
     if solutions:
         for k, v in solutions.items():
-            print(f"{k} - Cama {v.split('_')[1]} durante os dias {v.split('_')[3]}")
+            print(
+                f"Paciente {k} - Cama {v.split('_')[1]} durante os dias {v.split('_')[3]}"
+            )
     else:
         print("No solution found.")
 
