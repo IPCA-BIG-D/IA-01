@@ -102,6 +102,8 @@ def patient_admission_scheduling():
         days_for_patient = set(
             range(patient.admission_date, patient.discharge_date + 1)
         )
+        domain = []
+
         domain = [f"bed_{bed}_days_{days_for_patient}" for bed in beds]
         problem.addVariable(f"patient_{patient.id}", domain)
 
@@ -145,19 +147,22 @@ def patient_admission_scheduling():
             problem.addConstraint(test_telemetry, [variable])
 
     # Resolve o problema
-    solutions = problem.getSolutions()
-
+    solutions = problem.getSolution()
+    solutions = dict(sorted(solutions.items()))
     # Print the solution(s)
     if solutions:
-        for solution in solutions:
-            print(solution)
+        for k, v in solutions.items():
+            print(f"{k} - Cama {v.split('_')[1]} durante os dias {v.split('_')[3]}")
+        # for solution in solutions:
+        # print(solution)
+
         #    print("\nSolution:")
         #    for patient in patients:
         #        for night in nights:
         #            print(
         #                f"{patient}'s bed on night {night}: {solution[f'{patient}_night_{night}']}"
         #            )
-        print(f"There are {len(solutions)} solutions")
+        # print(f"There are {len(solutions)} solutions")
     else:
         print("No solution found.")
 
