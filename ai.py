@@ -6,9 +6,16 @@ from itertools import combinations
 
 
 @dataclass
+class Room:
+    id: int
+    oxygen: bool
+    telemetry: bool
+
+
+@dataclass
 class Bed:
     id: int
-    room_number: int
+    room: Room
 
     def __repr__(self) -> str:
         return str(self.id)
@@ -28,29 +35,8 @@ class Patient:
     gender: Gender
     admission_date: int
     discharge_date: int
-
-
-def find_combinations(nums):
-    result = []
-    for r in range(1, len(nums) + 1):
-        result.extend(combinations(nums, r))
-    return result
-
-
-def get_vars_except_current_patient(variables, patient):
-    vars_to_return = []
-    for v in variables:
-        if v.split("_")[3] != patient:
-            vars_to_return.append(v)
-    return vars_to_return
-
-
-def get_vars_only_current_bed(variables, day):
-    vars_to_return = []
-    for v in variables:
-        if v.split("_")[1] == day:
-            vars_to_return.append(v)
-    return vars_to_return
+    oxygen: bool
+    telemetry: bool
 
 
 def find_patients(patients, id):
@@ -60,42 +46,56 @@ def find_patients(patients, id):
     return None
 
 
+def get_bed_by_id(beds, bed_id) -> Bed:
+    for bed in beds:
+        if bed.id == bed_id:
+            return bed
+    return None
+
+
 def patient_admission_scheduling():
     # Create a problem instance
     problem = Problem()
 
+    rooms = [
+        Room(1, True, False),
+        Room(2, True, True),
+        Room(3, True, False),
+        Room(3, True, True),
+    ]
+
     beds = [
-        Bed(1, 1),
-        Bed(2, 1),
-        Bed(3, 2),
-        Bed(4, 2),
-        Bed(5, 1),
-        Bed(6, 1),
-        Bed(7, 2),
-        Bed(8, 2),
+        Bed(1, rooms[0]),
+        Bed(2, rooms[0]),
+        Bed(3, rooms[1]),
+        Bed(4, rooms[1]),
+        Bed(5, rooms[2]),
+        Bed(6, rooms[2]),
+        Bed(7, rooms[3]),
+        Bed(8, rooms[3]),
     ]
 
     patients = [
-        Patient(1, "Patient1", 98, Gender.MALE, 0, 1),
-        Patient(2, "Patient2", 82, Gender.MALE, 0, 0),
-        Patient(3, "Patient3", 43, Gender.MALE, 1, 1),
-        Patient(4, "Patient4", 88, Gender.MALE, 0, 0),
-        Patient(5, "Patient5", 20, Gender.FEMALE, 0, 3),
-        Patient(6, "Patient6", 65, Gender.FEMALE, 0, 1),
-        Patient(7, "Patient7", 33, Gender.FEMALE, 1, 7),
-        Patient(8, "Patient8", 86, Gender.MALE, 2, 3),
-        Patient(9, "Patient9", 22, Gender.FEMALE, 2, 5),
-        Patient(10, "Patient10", 70, Gender.FEMALE, 3, 10),
-        Patient(11, "Patient11", 42, Gender.MALE, 4, 10),
-        Patient(12, "Patient12", 3, Gender.FEMALE, 5, 11),
-        Patient(13, "Patient13", 14, Gender.FEMALE, 5, 12),
-        Patient(14, "Patient14", 78, Gender.MALE, 7, 13),
-        Patient(15, "Patient15", 29, Gender.FEMALE, 8, 9),
-        Patient(16, "Patient16", 61, Gender.FEMALE, 9, 15),
-        Patient(17, "Patient17", 56, Gender.FEMALE, 10, 17),
-        Patient(18, "Patient18", 106, Gender.FEMALE, 10, 14),
-        Patient(19, "Patient19", 4, Gender.MALE, 11, 17),
-        Patient(20, "Patient20", 52, Gender.FEMALE, 12, 19),
+        Patient(1, "Patient1", 98, Gender.MALE, 0, 0, False, False),
+        Patient(2, "Patient2", 82, Gender.MALE, 0, 5, True, True),
+        Patient(3, "Patient3", 43, Gender.MALE, 0, 1, False, False),
+        Patient(4, "Patient4", 88, Gender.MALE, 0, 4, False, False),
+        Patient(5, "Patient5", 20, Gender.FEMALE, 0, 3, False, True),
+        Patient(6, "Patient6", 65, Gender.FEMALE, 0, 1, False, False),
+        Patient(7, "Patient7", 33, Gender.FEMALE, 1, 7, True, False),
+        Patient(8, "Patient8", 86, Gender.MALE, 2, 3, False, False),
+        Patient(9, "Patient9", 22, Gender.FEMALE, 2, 5, False, True),
+        Patient(10, "Patient10", 70, Gender.FEMALE, 3, 10, True, False),
+        Patient(11, "Patient11", 42, Gender.MALE, 4, 10, True, True),
+        Patient(12, "Patient12", 3, Gender.FEMALE, 5, 11, False, False),
+        Patient(13, "Patient13", 14, Gender.FEMALE, 5, 12, False, True),
+        Patient(14, "Patient14", 78, Gender.MALE, 7, 13, False, False),
+        Patient(15, "Patient15", 29, Gender.FEMALE, 8, 9, True, False),
+        Patient(16, "Patient16", 61, Gender.FEMALE, 9, 15, False, False),
+        Patient(17, "Patient17", 56, Gender.FEMALE, 10, 17, False, True),
+        Patient(18, "Patient18", 106, Gender.FEMALE, 10, 14, True, False),
+        Patient(19, "Patient19", 4, Gender.MALE, 11, 17, True, False),
+        Patient(20, "Patient20", 52, Gender.FEMALE, 12, 19, True, True),
     ]
 
     for patient in patients:
@@ -105,6 +105,8 @@ def patient_admission_scheduling():
         domain = [f"bed_{bed}_days_{days_for_patient}" for bed in beds]
         problem.addVariable(f"patient_{patient.id}", domain)
 
+    # Avalia para cada paciente se o numero de dias (set) interceta com outro paciente,
+    # Se sim, a condição é falsa excepto se a cama for diferente
     for variable, domain in problem._variables.items():
         patient = variable.split("_")[1]
         patients_except_var = [p for p in problem._variables if p != variable]
@@ -119,33 +121,30 @@ def patient_admission_scheduling():
         for patient in patients_except_var:
             problem.addConstraint(test, [variable, patient])
 
-    # for variable, domain in problem._variables.items():
-    #     patient_id = int(variable.split("_")[3])
-    #     patient = find_patients(patients, patient_id)
-    #     days_in_hospital = list(
-    #         range(patient.admission_date, patient.discharge_date + 1)
-    #     )
+    # Adicionar constraint de oxigenio
+    for variable, domain in problem._variables.items():
+        patient_id = int(variable.split("_")[1])
+        patient = find_patients(patients, patient_id)
 
-    #     def test(a):
-    #         print(list(a) == days_in_hospital)
-    #         return list(a) == days_in_hospital
+        if patient.oxygen == True:
 
-    #     problem.addConstraint(test, [variable])
+            def test_oxygen(a):
+                bed_id = int(a.split("_")[1])
+                bed = get_bed_by_id(beds, bed_id)
+                return bed.room.oxygen
 
-    # # Add patients cannot be in different beds constraint
-    # for v, domain in problem._variables.items():
-    #     bed_from_var = v.split("_")[1]
-    #     all_vars_except_current_day = get_vars_except_current_bed(
-    #         problem._variables, bed_from_var
-    #     )
+            problem.addConstraint(test_oxygen, [variable])
 
-    #     def t(a, b):
-    #         return b != a or (a == None and b == None)
+        if patient.telemetry == True:
 
-    #     for except_days in all_vars_except_current_day:
-    #         problem.addConstraint(t, [v, except_days])
+            def test_telemetry(a):
+                bed_id = int(a.split("_")[1])
+                bed = get_bed_by_id(beds, bed_id)
+                return bed.room.telemetry
 
-    # # Solve the problem
+            problem.addConstraint(test_telemetry, [variable])
+
+    # Resolve o problema
     solutions = problem.getSolutions()
 
     # Print the solution(s)
