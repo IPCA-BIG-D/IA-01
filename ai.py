@@ -121,7 +121,7 @@ def patient_admission_scheduling():
         for patient in patients_except_var:
             problem.addConstraint(test, [variable, patient])
 
-    # Adicionar constraint de oxigenio
+    # Adicionar constraint de oxigenio e telemetria
     for variable, domain in problem._variables.items():
         patient_id = int(variable.split("_")[1])
         patient = find_patients(patients, patient_id)
