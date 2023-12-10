@@ -153,16 +153,6 @@ def patient_admission_scheduling():
     if solutions:
         for k, v in solutions.items():
             print(f"{k} - Cama {v.split('_')[1]} durante os dias {v.split('_')[3]}")
-        # for solution in solutions:
-        # print(solution)
-
-        #    print("\nSolution:")
-        #    for patient in patients:
-        #        for night in nights:
-        #            print(
-        #                f"{patient}'s bed on night {night}: {solution[f'{patient}_night_{night}']}"
-        #            )
-        # print(f"There are {len(solutions)} solutions")
     else:
         print("No solution found.")
 
